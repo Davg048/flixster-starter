@@ -25,7 +25,7 @@ App
 | **Header** | App title/branding bar. | App name/logo (uses `.App-header` CSS) | none (or `title`) | No |
 | **SearchBar** | Lets the user type and submit a search query. | A form with text input + submit button; a "clear/back to Now Playing" control | `onSearch(query)`, `onClear`, `query` | Local only (controlled input text) |
 | **SortControl** | Lets the user pick a sort order for the displayed list. | A `<select>` or buttons (e.g. Title A–Z, Release date, Rating) | `sortOption`, `onSortChange(option)` | No (lifts to App) |
-| **MovieList** | Lays out the grid of movie cards. | A grid container mapping movies → MovieCard | `movies[]`, `onCardClick(id)` | No |
+| **MovieList** | Fetches Now Playing movies and lays out the grid of cards. | A grid container mapping movies → MovieCard | (currently none — fetches its own data) | **Yes (M1)** — owns `movies` + the Now Playing fetch |
 | **MovieCard** | Displays one movie's poster + summary info. | Poster image, title, rating/release (uses `.movie-card` CSS) | `movie`, `onClick(id)` | No |
 | **MovieModal** | Shows full details for the selected movie, including AI insight. | Overlay with poster, title, overview, runtime, genres, AI recommendation; close button | `movie` (detailed), `onClose`, `loading`, `aiInsight` | No (display only) |
 | **Footer** | Static footer / TMDb attribution. | Attribution text/links | none | No |
@@ -75,6 +75,8 @@ Auth: `?api_key=${import.meta.env.VITE_API_KEY}` (or Bearer token header — pic
 | `searchText` | string | `""` | SearchBar (local) | input onChange |
 
 **Note on sorting:** sort can be applied client-side on the current `movies` array (derived value, possibly via `useMemo`) rather than stored separately — decide based on whether you sort what's loaded or re-query the API.
+
+**Divergence (Milestone 1):** This spec assigns the Now Playing fetch (and `movies` state) to **App**, but it was implemented in **MovieList**, which fetches its own data on mount. This was a deliberate choice to match the M1 instructions. It will likely lift back up to App in a later milestone once search, sort, and pagination need to share that state across components.
 
 ---
 
