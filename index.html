@@ -5,6 +5,17 @@
     <link rel="icon" type="image/png" href="/movie.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flixster</title>
+    <script>
+      // Set the theme BEFORE first paint to avoid a flash of the wrong theme
+      // (FOUC). Mirrors App's getInitialTheme: saved choice wins, else system.
+      (function () {
+        try {
+          var saved = localStorage.getItem('flixster-theme')
+          var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

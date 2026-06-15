@@ -1,10 +1,11 @@
 import './Header.css'
+import ThemeToggle from './ThemeToggle'
 
-// Header is a presentational component: no state, no props, no API calls.
-// It just renders the app's branding bar at the top of the page.
+// Header renders the app's branding bar plus the theme toggle. It owns no state
+// itself — `theme` and `onToggleTheme` are passed down from App.
 // We use the semantic <header> element so screen readers and browsers
 // understand this is the page's banner region.
-const Header = () => {
+const Header = ({ theme, onToggleTheme }) => {
   return (
     <header className="App-header">
       {/* Two-tone wordmark: "Flix" in the default light, "ster" in cream so
@@ -15,6 +16,7 @@ const Header = () => {
         Flix<span className="brand-accent">ster</span>
       </h1>
       <p className="app-tagline">Now playing in theaters</p>
+      <ThemeToggle theme={theme} onToggle={onToggleTheme} />
     </header>
   )
 }

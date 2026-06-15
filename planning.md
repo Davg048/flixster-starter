@@ -121,16 +121,44 @@ A follow-up pass to fix a "plain" feeling (diagnosed as missing *hierarchy* + *m
 - **Glow blobs:** a fixed `body::before` with two low-opacity radial gradients (indigo/slate) gives the frosted glass something to refract — the blur was nearly invisible over the smooth gradient before.
 - **Tokens added:** `--space-*` scale, `--shadow-*` elevation, `--max-width`. Shadows are tokenized partly to make a future light mode a clean swap.
 
-### 4d. Light mode — DEFERRED (next pass)
+### 4d. Light mode — IMPLEMENTED
 
-Not a literal palette inversion: glass tints with *white* today, which vanishes on a light background. The plan is a "role inversion" via a `[data-theme="light"]` block overriding the same CSS variables (glass tints navy, text flips dark, shadows navy-tinted not black), a `--focus-ring` token (cream→deep-indigo so the ring stays visible on light), and a React toggle on `document.documentElement` persisted to `localStorage`, defaulting from `prefers-color-scheme`. **Prereq:** tokenize the currently-hardcoded modal bg/close/overlay + shadows + body gradient first, or those stay dark while the rest flips.
+A "role inversion," not a literal palette flip (white glass would vanish on a pale page).
+- **Tokenized first** the values that were hardcoded so the flip reaches them: `--page-gradient`, `--modal-bg`, `--modal-close-bg`, `--overlay-bg`, `--select-option-bg`, `--shadow-modal`, `--glow-1/2`, `--link`, `--focus-ring`.
+- **`[data-theme='light']`** block in `index.css` overrides the *same* variable names with light values: glass tints navy (`rgba(17,24,68,...)`) so panes read darker than the page; `--text-on-dark`→navy `#111844` (~15:1), muted→deepened indigo `#3c4685` (~7.3:1); shadows navy-tinted not black; modal→near-white `rgba(252,252,253,0.85)`; option list→white.
+- **Accent unchanged:** cream stays the brand in both modes (`--accent`/`--accent-text` not overridden). Focus ring + footer link flip to deep indigo so they stay visible on light.
+- **Toggle:** `theme` state in `App` (lazy init: `localStorage` → `prefers-color-scheme`), an effect writes `data-theme` to `<html>` + persists to `localStorage`. `ThemeToggle` is a real `<button>` (sun/moon, `aria-pressed`, dynamic `aria-label`) in the header.
+- **FOUC guard:** inline script in `index.html` sets `data-theme` before first paint so a light-mode user never sees a dark flash on reload.
+- **Motion:** body theme cross-fade gated behind `prefers-reduced-motion`.
+- **Contrast:** every text pairing verified ≥4.5:1 (most 7–16:1) in both themes via WCAG math.
 
 ---
 
-## 5. AI Feature Spec
+## 5. AI Feature Spec (Milestone 8 — finalized before implementation)
 
-- **Where it displays:** inside **MovieModal**, below the overview — a short "Why you might watch this" blurb.
-- **Context sent to the AI:** the selected movie's `title`, `genres` (names), and `overview`.
-- **What the AI returns:** a 2–3 sentence watch recommendation written for someone deciding whether to watch.
-- **State:** `aiInsight` (string | null) owned by App, passed to MovieModal as a prop; plus reuse `isLoading`/a dedicated `aiLoading` flag while the request is in flight. Reset to `null` when the modal closes or a new movie is selected.
-- **Open questions to resolve at Milestone 8:** which provider/endpoint, where the call runs (the key must not leak to the browser — a serverless function or proxy may be needed), and how to handle AI errors gracefully (modal still works without the blurb).
+**Framing:** Flixster is a *discovery* tool, not a viewing tool — the user is deciding **whether to go see this in theaters**, not watching it here. The AI feature is a "Worth seeing?" take that helps them choose.
+
+### Prompt Spec
+- **Role (system message):** "You are a sharp, honest film concierge helping someone decide whether to see a movie that's currently in theaters. You have not seen the film yourself; you reason only from the title, genres, and official overview provided."
+- **Task:** Write a 2–3 sentence "Worth seeing?" take — who would enjoy it and what mood/occasion it suits — to help the user decide whether to catch it on the big screen.
+- **Inputs:** `title` (string), `genres` (comma-separated names, e.g. "Action, Sci-Fi"), `overview` (string). Passed in the user message.
+- **Output format:** plain text, 2–3 sentences, ~45 words max. No markdown, no headings, no "I" statements, no preamble like "Sure!" — just the recommendation text.
+- **Constraints:** no plot spoilers beyond the official overview; no invented facts (cast, ratings, box office) not given in the inputs; no generic hype ("a must-see", "instant classic"); no comparisons to other films unless it genuinely clarifies the vibe.
+- **Failure behavior:** on any error (network, rate limit/429, bad response shape) the function returns a friendly fallback string — `"We couldn't generate a recommendation for this one — check out the overview above!"` — so the modal still works. (Note: the PDF's suggested free models can be rate-limited; the fallback path is the expected behavior when that happens, not a bug.)
+
+### Endpoint & Model
+- **Endpoint:** `https://openrouter.ai/api/v1/chat/completions`
+- **Model:** `meta-llama/llama-3.3-70b-instruct:free` (per the project guide)
+- **Auth:** `Authorization: Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}` — key in `.env`, which is gitignored. Browser-exposed key is an accepted limitation for this learning project (would move to a backend proxy in production).
+
+### State & Trigger
+- **Owner:** **MovieModal** (revised from the original sketch that put it in App). The modal already receives the fetched `movie` details object and owns the modal's own lifecycle, so the AI state lives there too — simplest data flow, and it resets naturally when the modal unmounts on close.
+- **State variables:** `aiInsight` (string | null, initial `null`) and `loadingInsight` (boolean, initial `false`).
+- **Trigger:** a `useEffect` keyed on `movie?.id` (and `movie?.title`) — fires once the details are loaded, calls `getMovieInsight(title, genres, overview)`, sets `loadingInsight` true during the call, stores the result in `aiInsight`, and sets `loadingInsight` false in a `finally`.
+- **Display:** below the overview, under a "✨ Worth seeing?" label. While loading, show "✨ Getting a recommendation…". Reset is automatic — closing the modal unmounts it (App clears `selectedMovieId`), so `aiInsight`/`loadingInsight` start fresh for the next movie.
+
+### AI Feature — Decisions Log
+- **What the API returned initially:** The PDF's pinned model `meta-llama/llama-3.3-70b-instruct:free` kept returning HTTP 429 ("Provider returned error" — rate limited), and two other PDF-suggested free models (`google/gemma-3-27b-it:free`, `deepseek/...:free`) now 404 as "unavailable for free." When a call did succeed, the output was good and on-spec: e.g. for *Dune: Part Two* — "Fans of epic sci-fi world-building and political intrigue will relish the sprawling desert battles… Ideal for a weekend night when you want immersive visuals and a story that rewards patience." (2 sentences, spoiler-free, names audience + occasion).
+- **What I changed in my prompt:** The prompt wording itself held up well (no rewrites needed) — the framing as a "film concierge" who "hasn't seen the film" kept outputs grounded and hype-free. The real change was to the **model choice, not the prompt**: the PDF's pinned `meta-llama/llama-3.3-70b-instruct:free` was returning 429, so we switched to OpenRouter's `openrouter/free` auto-router, which picks an available free model per request and sidesteps the per-model rate limits. Also added the `HTTP-Referer` header (app attribution / rate-limit signal).
+- **What fallback behavior I implemented:** A single `getMovieInsight` call to `openrouter/free` wrapped in try/catch: on any non-200 (`throw`), bad response shape, or network error, it returns a friendly string — "We couldn't generate a recommendation for this one — check out the overview above!" — so the modal still shows all the real TMDb details. A `useEffect` `ignore` flag also prevents a stale insight from a previous movie landing in the wrong modal.
+- **What I learned:** Free LLM endpoints are *unreliable infrastructure*, not a fixed dependency — pinned free models get rate-limited and retired, so routing through `openrouter/free` (which auto-selects an available one) is far more robust than hardcoding a slug, and a graceful fallback is still essential. Also: in React, an async result must be guarded against the component's state having moved on (the `ignore` cleanup pattern), or you get race conditions where the wrong movie's recommendation appears.

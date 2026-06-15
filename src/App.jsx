@@ -8,12 +8,33 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 
 
+// Decide the starting theme ONCE (lazy initializer): a saved choice wins;
+// otherwise fall back to the OS preference. Runs before first paint.
+const getInitialTheme = () => {
+  const saved = localStorage.getItem('flixster-theme')
+  if (saved === 'light' || saved === 'dark') return saved
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+}
+
 const App = () => {
   const [movies, setMovies] = useState([])
   const [page, setPage] = useState(1)
   const [query, setQuery] = useState('')
   const [totalPages, setTotalPages] = useState(1)
   const [sortOption, setSortOption] = useState('none')
+
+  // Theme: 'dark' (default) or 'light'. Applied to <html> via data-theme so the
+  // [data-theme='light'] CSS block can override the :root variables.
+  const [theme, setTheme] = useState(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('flixster-theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }
 
   // Modal state (Milestone 4)
   const [selectedMovieId, setSelectedMovieId] = useState(null)
@@ -121,7 +142,7 @@ const App = () => {
 
     return (
       <div className="App">
-        <Header />
+        <Header theme={theme} onToggleTheme={toggleTheme} />
         <main className="page">
           {/* One toolbar row groups search + sort instead of two stacked
               centered islands, aligned to the same max-width as the grid. */}

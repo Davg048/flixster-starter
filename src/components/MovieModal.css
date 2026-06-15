@@ -2,7 +2,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(8, 12, 35, 0.6);
+  background-color: var(--overlay-bg);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   display: flex;
@@ -15,7 +15,7 @@
 /* The centered frosted glass card holding the movie details. */
 .modal-content {
   position: relative;
-  background-color: rgba(17, 24, 68, 0.72);
+  background-color: var(--modal-bg);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
   border: 1px solid var(--glass-border);
@@ -27,14 +27,14 @@
   padding: 0 0 24px;
   text-align: left;
   color: var(--text-on-dark);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-modal);
 }
 
 .modal-close {
   position: absolute;
   top: 12px;
   right: 12px;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--modal-close-bg);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   color: #fff;
@@ -96,4 +96,46 @@
   margin: 0 24px;
   line-height: 1.6;
   color: var(--text-on-dark);
+}
+
+/* AI "Worth seeing?" panel — a subtly tinted card set off from the overview,
+   with a cream left border so it reads as the app's signature feature. */
+.ai-insight {
+  margin: 20px 24px 0;
+  padding: 14px 16px;
+  background-color: var(--glass-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.ai-insight-label {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: var(--text-on-dark);
+}
+
+.ai-insight-text {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--text-on-dark);
+}
+
+/* Subtle pulse so the loading line reads as "working", not frozen. */
+.ai-insight-loading {
+  margin: 0;
+  color: var(--text-on-dark-muted);
+  font-style: italic;
+  animation: ai-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ai-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Respect users who prefer reduced motion — hold steady instead of pulsing. */
+@media (prefers-reduced-motion: reduce) {
+  .ai-insight-loading {
+    animation: none;
+  }
 }

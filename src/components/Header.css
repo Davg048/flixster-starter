@@ -2,6 +2,8 @@
    Uses the STRONGER glass tint so the chrome reads as distinct from the
    lighter content cards below it (material hierarchy). */
 .App-header {
+  /* sticky is a "positioned" value, so it also anchors the absolutely
+     positioned .theme-toggle inside it (top/right offsets apply to this box). */
   position: sticky;
   top: 0;
   z-index: 100;
@@ -27,9 +29,9 @@
   color: var(--text-on-dark);
 }
 
-/* The cream half of the two-tone wordmark. */
+/* The accent half of the two-tone wordmark (cream on dark, indigo on light). */
 .brand-accent {
-  color: var(--cream);
+  color: var(--brand-accent);
 }
 
 /* Slightly shrink + space the emoji so it sits as a mark, not a giant glyph. */

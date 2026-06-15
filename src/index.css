@@ -32,6 +32,14 @@
   --accent: var(--cream);
   --accent-text: var(--navy);     /* dark text on the cream accent */
 
+  /* Brand wordmark accent ("ster"). Cream pops on the dark header, but would
+     vanish on the light one — so it's a token that flips per theme. */
+  --brand-accent: var(--cream);
+
+  /* Focus ring color is a token so light mode can darken it (a cream ring
+     nearly disappears on a pale page — that would be an a11y regression). */
+  --focus-ring: var(--cream);
+
   --font-heading: 'Poppins', Arial, sans-serif;
   --font-body: 'Inter', Arial, sans-serif;
 
@@ -44,13 +52,56 @@
   --radius: 16px;
   --radius-sm: 10px;
 
-  /* Elevation tokens. Layered shadows read as real depth; tokenized so a
-     future light mode can swap black shadows for softer navy-tinted ones. */
+  /* Elevation tokens. Layered shadows read as real depth; tokenized so light
+     mode can swap black shadows for softer navy-tinted ones. */
   --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.22);
   --shadow-card-hover: 0 14px 32px rgba(0, 0, 0, 0.42);
   --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.5);
 
   --max-width: 1400px;
+
+  /* Surfaces that used to be hardcoded — now tokens so the theme flip reaches
+     them. Defaults below are the DARK theme values. */
+  --page-gradient: linear-gradient(160deg, #0c1232 0%, var(--navy) 45%, #232b63 100%);
+  --modal-bg: rgba(17, 24, 68, 0.72);
+  --modal-close-bg: rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(8, 12, 35, 0.6);
+  --select-option-bg: var(--navy);
+  --link: var(--cream);                /* footer/links accent */
+  --glow-1: rgba(75, 86, 148, 0.40);   /* indigo glow blob */
+  --glow-2: rgba(114, 136, 174, 0.30); /* slate glow blob */
+}
+
+/*
+  LIGHT THEME — a "role inversion", not a literal color flip. We keep the SAME
+  variable names (even --text-on-dark, now a slight misnomer) and only change
+  their VALUES, so no component CSS has to change. Key reversals:
+    • glass tints with NAVY (not white) so panes read darker than the pale page
+    • text flips to navy / deepened-indigo (verified ≥7:1 on the gradient)
+    • shadows become navy-tinted, not black (black looks like dirt on light)
+    • the cream accent stays the SAME in both modes (it's the brand)
+    • focus ring darkens so it stays visible on a light background
+*/
+[data-theme='light'] {
+  --glass-bg: rgba(17, 24, 68, 0.05);
+  --glass-bg-strong: rgba(17, 24, 68, 0.09);
+  --glass-border: rgba(17, 24, 68, 0.16);
+
+  --text-on-dark: #111844;        /* navy — ~15:1 on the light gradient */
+  --text-on-dark-muted: #3c4685;  /* deepened indigo — ~7.3:1, clears AA */
+
+  --brand-accent: #4b5694;        /* indigo "ster" — pops on the light header */
+  --focus-ring: #3c4685;          /* deep indigo ring, visible on light */
+
+  --page-gradient: linear-gradient(160deg, #f4f1ea 0%, #eef0f7 45%, #e7eaf3 100%);
+  --modal-bg: rgba(252, 252, 253, 0.85);  /* near-white frosted panel */
+  --modal-close-bg: rgba(17, 24, 68, 0.45);
+  --overlay-bg: rgba(8, 12, 35, 0.45);
+  --select-option-bg: #ffffff;
+  --link: #3c4685;                /* deep indigo link, visible on light */
+  --glow-1: rgba(75, 86, 148, 0.18);
+  --glow-2: rgba(114, 136, 174, 0.16);
+  /* --accent / --accent-text intentionally unchanged: cream stays the brand. */
 }
 
 body {
@@ -60,8 +111,16 @@ body {
   line-height: 1.5;
   color: var(--text-on-dark);
   /* fixed so the gradient stays put while the page scrolls */
-  background: linear-gradient(160deg, #0c1232 0%, var(--navy) 45%, #232b63 100%) fixed;
+  background: var(--page-gradient) fixed;
   min-height: 100vh;
+  /* Gentle cross-fade when toggling themes (disabled for reduced-motion users). */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
 }
 
 /*
@@ -77,8 +136,8 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(42% 48% at 14% 18%, rgba(75, 86, 148, 0.40), transparent 70%),
-    radial-gradient(46% 46% at 86% 78%, rgba(114, 136, 174, 0.30), transparent 70%);
+    radial-gradient(42% 48% at 14% 18%, var(--glow-1), transparent 70%),
+    radial-gradient(46% 46% at 86% 78%, var(--glow-2), transparent 70%);
 }
 
 h1, h2, h3 {
@@ -115,6 +174,6 @@ button:active {
   clicks — so it stays clean for mouse users while remaining accessible.
 */
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }

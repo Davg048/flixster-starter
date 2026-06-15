@@ -25,8 +25,8 @@
 }
 
 /* The dropdown list itself can't be glassy (OS-rendered), so keep options
-   readable with solid navy + light text. */
+   readable with a solid surface + theme-aware text. */
 .sort-control select option {
-  background-color: var(--navy);
+  background-color: var(--select-option-bg);
   color: var(--text-on-dark);
 }
