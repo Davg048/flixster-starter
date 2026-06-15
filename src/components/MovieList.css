@@ -1,6 +1,34 @@
+/*
+  Responsive grid plan (breakpoints):
+  - Desktop  (≥1024px): cards ~200px wide, 4–6 per row depending on window width
+  - Tablet   (600–1023px): cards ~160px wide, 3–4 per row
+  - Mobile   (<600px): cards fill more of the width, 2 per row
+  auto-fill + minmax lets the browser fit as many columns as will fit,
+  then the @media queries shrink the minimum card width at narrower screens.
+*/
+
 .movie-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Tablet: smaller minimum so we still get a few columns */
+@media (max-width: 1023px) {
+  .movie-list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+}
+
+/* Mobile: force exactly 2 columns so cards stay legible, not too tiny */
+@media (max-width: 600px) {
+  .movie-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
 }
