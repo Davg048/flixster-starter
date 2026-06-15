@@ -4,6 +4,8 @@ import MovieList from './components/MovieList'
 import SearchBar from './components/SearchBar'
 import MovieModal from './components/MovieModal'
 import SortControl from './components/SortControl'
+import Header from './components/Header'
+import Footer from './components/Footer'
 
 
 const App = () => {
@@ -115,22 +117,26 @@ const App = () => {
 
     return (
       <div className="App">
-        <SearchBar onSearch={handleSearch} onClear={handleClear} />
-        <SortControl sortOption={sortOption} onSortChange={setSortOption} />
-        <MovieList movies={sortedMovies} onCardClick={handleCardClick} />
-        {page < totalPages && (
-          <button className="load-more" onClick={handleLoadMore}>
-            Load More
-          </button>
-        )}
-        {selectedMovieId !== null && (
-          <MovieModal
-            movie={selectedMovieDetails}
-            loading={detailsLoading}
-            error={detailsError}
-            onClose={handleCloseModal}
-          />
-        )}
+        <Header />
+        <main>
+          <SearchBar onSearch={handleSearch} onClear={handleClear} />
+          <SortControl sortOption={sortOption} onSortChange={setSortOption} />
+          <MovieList movies={sortedMovies} onCardClick={handleCardClick} />
+          {page < totalPages && (
+            <button className="load-more" onClick={handleLoadMore}>
+              Load More
+            </button>
+          )}
+          {selectedMovieId !== null && (
+            <MovieModal
+              movie={selectedMovieDetails}
+              loading={detailsLoading}
+              error={detailsError}
+              onClose={handleCloseModal}
+            />
+          )}
+        </main>
+        <Footer />
       </div>
     )
   

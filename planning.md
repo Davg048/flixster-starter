@@ -22,13 +22,13 @@ App
 | Component | Responsibility | Renders | Props received | Owns state? |
 |-----------|----------------|---------|----------------|-------------|
 | **App** | Top-level container; owns all shared state and data fetching. | Header, SearchBar, SortControl, MovieList, MovieModal, Footer | none | **Yes** — movie list, query, page, selected movie, sort, loading, error |
-| **Header** | App title/branding bar. | App name/logo (uses `.App-header` CSS) | none (or `title`) | No |
+| **Header** | App title/branding bar. | App name + tagline inside semantic `<header>` (styles in `Header.css`) | none | No |
 | **SearchBar** | Lets the user type and submit a search query. | A form with text input + submit button; a "clear/back to Now Playing" control | `onSearch(query)`, `onClear`, `query` | Local only (controlled input text) |
 | **SortControl** | Lets the user pick a sort order for the displayed list. | A `<select>` or buttons (e.g. Title A–Z, Release date, Rating) | `sortOption`, `onSortChange(option)` | No (lifts to App) |
 | **MovieList** | Lays out the grid of movie cards (presentational as of M2). | A grid container mapping movies → MovieCard | `movies[]` | No (lifted to App in M2) |
 | **MovieCard** | Displays one movie's poster + summary info. | Poster image, title, rating/release (uses `.movie-card` CSS) | `movie`, `onClick(id)` | No |
 | **MovieModal** | Shows full details for the selected movie, including AI insight. | Overlay with backdrop image, title, runtime, release date, genres, overview, AI recommendation; close button | `movie` (detailed object), `onClose`, `loading`, `error` (+ `aiInsight` in M8) | No (display only) |
-| **Footer** | Static footer / TMDb attribution. | Attribution text/links | none | No |
+| **Footer** | Static footer / TMDb attribution. | Copyright + required link to themoviedb.org inside semantic `<footer>` (styles in `Footer.css`) | none | No |
 
 ---
 

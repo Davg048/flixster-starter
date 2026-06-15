@@ -9,15 +9,7 @@
   border-radius: 4px;
 }
 
-.App-header {
-  background-color: #282c34;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-evenly;
-  color: white;
-  padding: 20px;
-}
+/* .App-header styles now live in components/Header.css */
 
 @media (max-width: 600px) {
   .movie-card {
