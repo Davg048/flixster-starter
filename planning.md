@@ -68,13 +68,20 @@ Auth: `?api_key=${import.meta.env.VITE_API_KEY}` (or Bearer token header — pic
 | `page` | number | `1` | App | "Load More" button; reset to 1 on new search or return to Now Playing |
 | `totalPages` | number | `1` | App | set from API response; used to hide/disable "Load More" on the last page |
 | `selectedMovie` | object \| null | `null` | App | MovieCard click (set), modal close (null) |
-| `sortOption` | string | `"none"` (or `"popularity"`) | App | SortControl change |
+| `sortOption` | string | `"none"` | App | SortControl dropdown change |
 | `isLoading` | boolean | `false` | App | true before fetch, false after |
 | `error` | string \| null | `null` | App | set on failed fetch, cleared on retry |
 | `aiInsight` | string \| null | `null` | App | set after AI call completes (see §5) |
 | `searchText` | string | `""` | SearchBar (local) | input onChange |
 
-**Note on sorting:** sort can be applied client-side on the current `movies` array (derived value, possibly via `useMemo`) rather than stored separately — decide based on whether you sort what's loaded or re-query the API.
+**Sorting decisions (Milestone 5):**
+- **Where the transform happens:** *during rendering*, not in state. App keeps the raw `movies` array untouched and computes a sorted copy (`[...movies].sort(...)`) just before passing it to MovieList. This keeps the original fetch/append order intact, so switching back to "none" or loading more pages still works cleanly.
+- **Sort direction per option:**
+  - `title` → A→Z, using `a.title.localeCompare(b.title)`
+  - `release_date` → newest first, comparing the date strings descending
+  - `vote_average` → highest first, `b.vote_average - a.vote_average`
+  - `none` → original API order (no sort)
+- **Known tradeoff:** sorting only reorders movies *currently loaded* in state (e.g. across loaded pages), not all of TMDb. Accepted for this project.
 
 **Divergence (Milestone 1):** This spec assigns the Now Playing fetch (and `movies` state) to **App**, but it was implemented in **MovieList**, which fetches its own data on mount. This was a deliberate choice to match the M1 instructions.
 

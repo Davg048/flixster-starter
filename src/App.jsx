@@ -3,6 +3,7 @@ import './App.css'
 import MovieList from './components/MovieList'
 import SearchBar from './components/SearchBar'
 import MovieModal from './components/MovieModal'
+import SortControl from './components/SortControl'
 
 
 const App = () => {
@@ -10,6 +11,7 @@ const App = () => {
   const [page, setPage] = useState(1)
   const [query, setQuery] = useState('')
   const [totalPages, setTotalPages] = useState(1)
+  const [sortOption, setSortOption] = useState('none')
 
   // Modal state (Milestone 4)
   const [selectedMovieId, setSelectedMovieId] = useState(null)
@@ -95,10 +97,27 @@ const App = () => {
 
       fetchDetails()
     }, [selectedMovieId])
+
+    // Sort a COPY of movies just before rendering (don't mutate state).
+    // "none" leaves the original API order untouched.
+    const sortedMovies = [...movies].sort((a, b) => {
+      if (sortOption === 'title') {
+        return a.title.localeCompare(b.title)
+      }
+      if (sortOption === 'release_date') {
+        return b.release_date.localeCompare(a.release_date) // newest first
+      }
+      if (sortOption === 'vote_average') {
+        return b.vote_average - a.vote_average // highest first
+      }
+      return 0 // "none": keep original order
+    })
+
     return (
       <div className="App">
         <SearchBar onSearch={handleSearch} onClear={handleClear} />
-        <MovieList movies={movies} onCardClick={handleCardClick} />
+        <SortControl sortOption={sortOption} onSortChange={setSortOption} />
+        <MovieList movies={sortedMovies} onCardClick={handleCardClick} />
         {page < totalPages && (
           <button className="load-more" onClick={handleLoadMore}>
             Load More
