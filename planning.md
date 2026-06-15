@@ -101,6 +101,32 @@ Searching swaps the data source: SearchBar submit sets `query`, resets `page` to
 
 ---
 
+## 4b. Visual Design (Milestone 7)
+
+- **Theme:** cool, Apple-inspired *frosted glass* (glassmorphism). A fixed navy→indigo gradient fills the page; every panel (header, footer, cards, modal, search, sort) is a translucent, `backdrop-filter: blur()` surface floating on top.
+- **Palette:** `#111844` navy · `#4B5694` indigo · `#7288AE` slate · `#EAE0CF` cream. Cream is the single accent — used only for the "Load More" button, genre tags, and keyboard focus rings so they stand out against the blues.
+- **Typography:** Poppins (headings) + Inter (body), loaded via Google Fonts `@import` in `index.css`.
+- **Design tokens:** all colors, fonts, blur, and radii are CSS custom properties in `:root` (`index.css`) so the palette is consistent and changeable in one place.
+- **Why dark-base glass:** glass surfaces make text contrast the hard part; keeping the gradient dark guarantees light text (`--text-on-dark`) clears WCAG AA on every panel. A light-glass version would fail contrast for the cream text.
+- **Accessibility:** `:focus-visible` cream ring on all interactive elements (keyboard-only, not mouse); MovieCard `<div role="button">` got an `aria-label`; semantic `<header>/<main>/<footer>` from M6; all `<img>` already carry descriptive `alt`.
+
+### 4c. Layout & hierarchy pass ("Editorial Marquee")
+
+A follow-up pass to fix a "plain" feeling (diagnosed as missing *hierarchy* + *material sameness*, not a color problem):
+- **Brand wordmark:** two-tone "Flix**ster**" (cream `ster`), scaled up with `clamp(2.5rem, 6vw, 3.5rem)` + Poppins 700. The 🎬 is `aria-hidden` (decorative).
+- **Layout:** removed `text-align:center`; content lives in a `--max-width` (1400px) `.page` column with `clamp()` side padding. Search + sort merged into one `.toolbar` row (wraps/stacks on mobile).
+- **Section header:** a `Now Playing` / `Results for "<query>"` heading with a live `{count} films` and a faint cream rule, above the grid.
+- **Featured tile:** the first card spans 2×2 (`grid-column/row: span 2`) with `grid-auto-flow: dense` backfilling; the span is disabled below 700px so it never overflows a narrow grid. *(A full hero banner is deferred to a later pass.)*
+- **Material depth:** header uses the *stronger* glass tint to read as chrome vs. lighter content cards; cards got a real resting layered shadow (`--shadow-card`) so the grid looks alive before hover; hover lift also fires on `:focus-within` (keyboard/touch parity). Rating moved to a cream pill overlaid on the poster; titles `-webkit-line-clamp`ed to 2 lines for even heights.
+- **Glow blobs:** a fixed `body::before` with two low-opacity radial gradients (indigo/slate) gives the frosted glass something to refract — the blur was nearly invisible over the smooth gradient before.
+- **Tokens added:** `--space-*` scale, `--shadow-*` elevation, `--max-width`. Shadows are tokenized partly to make a future light mode a clean swap.
+
+### 4d. Light mode — DEFERRED (next pass)
+
+Not a literal palette inversion: glass tints with *white* today, which vanishes on a light background. The plan is a "role inversion" via a `[data-theme="light"]` block overriding the same CSS variables (glass tints navy, text flips dark, shadows navy-tinted not black), a `--focus-ring` token (cream→deep-indigo so the ring stays visible on light), and a React toggle on `document.documentElement` persisted to `localStorage`, defaulting from `prefers-color-scheme`. **Prereq:** tokenize the currently-hardcoded modal bg/close/overlay + shadows + body gradient first, or those stay dark while the rest flips.
+
+---
+
 ## 5. AI Feature Spec
 
 - **Where it displays:** inside **MovieModal**, below the overview — a short "Why you might watch this" blurb.

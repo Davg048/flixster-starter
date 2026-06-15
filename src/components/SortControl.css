@@ -1,19 +1,32 @@
 .sort-control {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  padding: 0 20px 12px;
+  flex: 0 0 auto;
 }
 
 .sort-control label {
-  font-weight: bold;
+  font-weight: 500;
+  color: var(--text-on-dark-muted);
 }
 
+/* Frosted glass select to match the search input. */
 .sort-control select {
-  padding: 8px 12px;
+  padding: 9px 14px;
   font-size: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  font-family: var(--font-body);
+  color: var(--text-on-dark);
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
   cursor: pointer;
+}
+
+/* The dropdown list itself can't be glassy (OS-rendered), so keep options
+   readable with solid navy + light text. */
+.sort-control select option {
+  background-color: var(--navy);
+  color: var(--text-on-dark);
 }

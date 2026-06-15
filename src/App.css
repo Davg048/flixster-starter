@@ -1,19 +1,72 @@
 .App {
-  text-align: center;
+  text-align: left;
 }
 
+/* Centered max-width content column with breathing room on the sides. */
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-lg) clamp(var(--space-md), 5vw, var(--space-xl));
+}
+
+/* Search + sort grouped into one row; wraps to stacked on narrow screens. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+/* Section header: title left, live count right, with a thin cream rule. */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(234, 224, 207, 0.3); /* faint cream rule */
+}
+
+.section-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 600;
+}
+
+.section-count {
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-on-dark-muted);
+  white-space: nowrap;
+}
+
+/* The one solid accent button — cream pill on the cool background. */
 .load-more {
-  margin: 20px auto 40px;
-  padding: 12px 28px;
+  display: block;
+  margin: var(--space-md) auto var(--space-xl);
+  padding: 12px 32px;
+  background-color: var(--accent);
+  color: var(--accent-text);
   border: none;
-  border-radius: 4px;
+  border-radius: 999px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.load-more:hover {
+  background-color: #f3ecdd;
 }
 
 /* .App-header styles now live in components/Header.css */
 
 @media (max-width: 600px) {
-  .movie-card {
-    width: 100%;
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .search-bar {

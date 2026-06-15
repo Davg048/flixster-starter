@@ -115,12 +115,28 @@ const App = () => {
       return 0 // "none": keep original order
     })
 
+    // Label + count for the section header. Reflects whether we're showing
+    // search results or the default Now Playing list.
+    const sectionTitle = query ? `Results for "${query}"` : 'Now Playing'
+
     return (
       <div className="App">
         <Header />
-        <main>
-          <SearchBar onSearch={handleSearch} onClear={handleClear} />
-          <SortControl sortOption={sortOption} onSortChange={setSortOption} />
+        <main className="page">
+          {/* One toolbar row groups search + sort instead of two stacked
+              centered islands, aligned to the same max-width as the grid. */}
+          <div className="toolbar">
+            <SearchBar onSearch={handleSearch} onClear={handleClear} />
+            <SortControl sortOption={sortOption} onSortChange={setSortOption} />
+          </div>
+
+          {/* Section header turns the wall of posters into a labeled section
+              and gives a live result count. */}
+          <header className="section-head">
+            <h2 className="section-title">{sectionTitle}</h2>
+            <span className="section-count">{sortedMovies.length} films</span>
+          </header>
+
           <MovieList movies={sortedMovies} onCardClick={handleCardClick} />
           {page < totalPages && (
             <button className="load-more" onClick={handleLoadMore}>

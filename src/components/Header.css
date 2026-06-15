@@ -1,20 +1,47 @@
+/* Frosted glass banner that sticks to the top as you scroll.
+   Uses the STRONGER glass tint so the chrome reads as distinct from the
+   lighter content cards below it (material hierarchy). */
 .App-header {
-  background-color: #282c34;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: white;
-  padding: 20px;
+  padding: var(--space-lg) var(--space-md);
+  background-color: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
 }
 
+/* Display-scale wordmark. clamp(min, fluid, max) = responsive size with no
+   media query: ~2.5rem on phones, growing to 3.5rem on wide screens. */
 .app-title {
   margin: 0;
-  font-size: 2rem;
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text-on-dark);
+}
+
+/* The cream half of the two-tone wordmark. */
+.brand-accent {
+  color: var(--cream);
+}
+
+/* Slightly shrink + space the emoji so it sits as a mark, not a giant glyph. */
+.brand-mark {
+  font-size: 0.85em;
+  margin-right: 0.15em;
 }
 
 .app-tagline {
-  margin: 4px 0 0;
-  font-size: 0.95rem;
-  color: #b0b0b0;
+  margin: var(--space-sm) 0 0;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-on-dark-muted);
 }

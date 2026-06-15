@@ -7,7 +7,13 @@ import './Header.css'
 const Header = () => {
   return (
     <header className="App-header">
-      <h1 className="app-title">🎬 Flixster</h1>
+      {/* Two-tone wordmark: "Flix" in the default light, "ster" in cream so
+          the brand accent appears where identity lives. The 🎬 is decorative,
+          so aria-hidden keeps screen readers from announcing "clapper board". */}
+      <h1 className="app-title">
+        <span className="brand-mark" aria-hidden="true">🎬</span>
+        Flix<span className="brand-accent">ster</span>
+      </h1>
       <p className="app-tagline">Now playing in theaters</p>
     </header>
   )

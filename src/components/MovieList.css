@@ -2,25 +2,44 @@
   Responsive grid plan (breakpoints):
   - Desktop  (≥1024px): cards ~200px wide, 4–6 per row depending on window width
   - Tablet   (600–1023px): cards ~160px wide, 3–4 per row
-  - Mobile   (<600px): cards fill more of the width, 2 per row
-  auto-fill + minmax lets the browser fit as many columns as will fit,
-  then the @media queries shrink the minimum card width at narrower screens.
+  - Mobile   (<600px): 2 per row
+  auto-fill + minmax lets the browser fit as many columns as will fit;
+  grid-auto-flow: dense lets smaller cards backfill the gaps the featured
+  (2×2) tile leaves behind, so there are no holes in the layout.
 */
 
 .movie-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  grid-auto-flow: dense;
+  gap: clamp(var(--space-md), 2vw, 28px);
+}
+
+/* Cards lay out as a column so the poster fills available height and the
+   title sits at the bottom — important for the taller featured tile. */
+.movie-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card .poster-wrap {
+  flex: 1;
+  min-height: 0;
 }
 
 /* Tablet: smaller minimum so we still get a few columns */
 @media (max-width: 1023px) {
   .movie-list {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
+  }
+}
+
+/* The featured 2×2 span only makes sense when at least ~3 columns fit.
+   Below 700px we disable it so the big tile never overflows a narrow grid. */
+@media (max-width: 699px) {
+  .movie-card.featured {
+    grid-column: span 1;
+    grid-row: span 1;
   }
 }
 
@@ -29,6 +48,5 @@
   .movie-list {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    padding: 12px;
   }
 }
