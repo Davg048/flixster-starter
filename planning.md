@@ -25,9 +25,9 @@ App
 | **Header** | App title/branding bar. | App name/logo (uses `.App-header` CSS) | none (or `title`) | No |
 | **SearchBar** | Lets the user type and submit a search query. | A form with text input + submit button; a "clear/back to Now Playing" control | `onSearch(query)`, `onClear`, `query` | Local only (controlled input text) |
 | **SortControl** | Lets the user pick a sort order for the displayed list. | A `<select>` or buttons (e.g. Title A–Z, Release date, Rating) | `sortOption`, `onSortChange(option)` | No (lifts to App) |
-| **MovieList** | Fetches Now Playing movies and lays out the grid of cards. | A grid container mapping movies → MovieCard | (currently none — fetches its own data) | **Yes (M1)** — owns `movies` + the Now Playing fetch |
+| **MovieList** | Lays out the grid of movie cards (presentational as of M2). | A grid container mapping movies → MovieCard | `movies[]` | No (lifted to App in M2) |
 | **MovieCard** | Displays one movie's poster + summary info. | Poster image, title, rating/release (uses `.movie-card` CSS) | `movie`, `onClick(id)` | No |
-| **MovieModal** | Shows full details for the selected movie, including AI insight. | Overlay with poster, title, overview, runtime, genres, AI recommendation; close button | `movie` (detailed), `onClose`, `loading`, `aiInsight` | No (display only) |
+| **MovieModal** | Shows full details for the selected movie, including AI insight. | Overlay with backdrop image, title, runtime, release date, genres, overview, AI recommendation; close button | `movie` (detailed object), `onClose`, `loading`, `error` (+ `aiInsight` in M8) | No (display only) |
 | **Footer** | Static footer / TMDb attribution. | Attribution text/links | none | No |
 
 ---
@@ -51,11 +51,11 @@ Auth: `?api_key=${import.meta.env.VITE_API_KEY}` (or Bearer token header — pic
 - **Errors to handle:** empty query (don't fire request), zero results ("No movies found"), non-200, network failure
 
 ### 2c. Movie Details (for the modal)
-- **URL:** `GET /movie/{movie_id}`
+- **URL:** `GET /movie/{movie_id}` (the movie ID is a path parameter)
 - **Required params:** `api_key`, `language=en-US`
-- **Response fields used:** `runtime`, `genres[]` (`.name`), `overview`, `title`, `poster_path`, `vote_average`, `release_date`
+- **Response fields used:** `title`, `runtime`, `release_date`, `genres[]` (`.name`), `overview`, `backdrop_path` (+ `poster_path`, `vote_average` available)
 - **Why separate:** Now Playing/Search don't return `runtime` or `genres` — the modal must fetch details by ID on card click.
-- **Errors to handle:** invalid/missing ID, non-200, network failure, loading state while details fetch
+- **Errors to handle:** movie not found (404), bad API key (401), network failure; show a loading state while the details fetch is in flight and a friendly message if it fails.
 
 ---
 
@@ -64,9 +64,9 @@ Auth: `?api_key=${import.meta.env.VITE_API_KEY}` (or Bearer token header — pic
 | State | Type | Initial | Owner | Updated by |
 |-------|------|---------|-------|------------|
 | `movies` | array | `[]` | App | Now Playing fetch, Search fetch, "Load More" (append), sort |
-| `query` | string | `""` | App | SearchBar submit / clear |
-| `page` | number | `1` | App | "Load More" button; reset to 1 on new search |
-| `totalPages` | number | `1` | App | set from API response |
+| `query` | string | `""` | App | SearchBar submit / clear. Empty string = Now Playing mode; non-empty = Search mode (doubles as the mode flag) |
+| `page` | number | `1` | App | "Load More" button; reset to 1 on new search or return to Now Playing |
+| `totalPages` | number | `1` | App | set from API response; used to hide/disable "Load More" on the last page |
 | `selectedMovie` | object \| null | `null` | App | MovieCard click (set), modal close (null) |
 | `sortOption` | string | `"none"` (or `"popularity"`) | App | SortControl change |
 | `isLoading` | boolean | `false` | App | true before fetch, false after |
@@ -76,7 +76,9 @@ Auth: `?api_key=${import.meta.env.VITE_API_KEY}` (or Bearer token header — pic
 
 **Note on sorting:** sort can be applied client-side on the current `movies` array (derived value, possibly via `useMemo`) rather than stored separately — decide based on whether you sort what's loaded or re-query the API.
 
-**Divergence (Milestone 1):** This spec assigns the Now Playing fetch (and `movies` state) to **App**, but it was implemented in **MovieList**, which fetches its own data on mount. This was a deliberate choice to match the M1 instructions. It will likely lift back up to App in a later milestone once search, sort, and pagination need to share that state across components.
+**Divergence (Milestone 1):** This spec assigns the Now Playing fetch (and `movies` state) to **App**, but it was implemented in **MovieList**, which fetches its own data on mount. This was a deliberate choice to match the M1 instructions.
+
+**Resolved (Milestone 2):** State lifted back up to **App** as the spec always intended. App now owns `movies`, `page`, `query`, `totalPages` and all fetch logic. `MovieList` became presentational (receives `movies` as a prop). `SearchBar` (new, sibling of MovieList) receives callbacks from App. Mode is tracked implicitly by `query`: empty string → Now Playing, non-empty → Search results.
 
 ---
 
@@ -84,7 +86,9 @@ Auth: `?api_key=${import.meta.env.VITE_API_KEY}` (or Bearer token header — pic
 
 On mount, **App** fetches `/movie/now_playing`, receives a JSON body, and stores `data.results` into `movies` state. The raw results are mostly usable as-is, but each card needs a light transform: build the full poster URL (`image base + poster_path`), handle a `null` `poster_path` with a fallback, and format `release_date` (and `vote_average` rounding) for display. `movies` is passed as a prop to **MovieList**, which maps each entry to a **MovieCard**.
 
-When a user clicks a MovieCard, the card calls `onClick(movie.id)`. That ID bubbles up to App, which fires a **second fetch** to `/movie/{id}` for full details (runtime + genres), stores the result in `selectedMovie`, and renders **MovieModal**. So the click → ID → details-fetch path is: `MovieCard onClick(id)` → `App handleCardClick(id)` → `fetch(/movie/id)` → `setSelectedMovie(details)` → modal renders.
+When a user clicks a MovieCard, the card calls `onCardClick(movie.id)`. That ID bubbles up to App, which stores it in `selectedMovieId` state. A `useEffect` watching `selectedMovieId` fires a **second fetch** to `/movie/{id}` for full details (runtime + genres + backdrop), stores the result in `selectedMovieDetails`, and renders **MovieModal**. Closing the modal sets `selectedMovieId` back to `null`, which unmounts the modal and clears the details. So the path is: `MovieCard onCardClick(id)` → `App setSelectedMovieId(id)` → `useEffect → fetch(/movie/id)` → `setSelectedMovieDetails(details)` → modal renders; close → `setSelectedMovieId(null)`.
+
+**Modal state ownership (M4):** App owns `selectedMovieId` (number | null — which movie's modal is open, null = closed), `selectedMovieDetails` (object | null — the fetched details), `detailsLoading` (bool), and `detailsError` (string | null). The "modal is open" condition is simply `selectedMovieId !== null`.
 
 Searching swaps the data source: SearchBar submit sets `query`, resets `page` to 1, and App fetches `/search/movie?query=...` instead of Now Playing. Clearing the search returns to Now Playing.
 
