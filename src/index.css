@@ -70,6 +70,11 @@
   --link: var(--cream);                /* footer/links accent */
   --glow-1: rgba(75, 86, 148, 0.40);   /* indigo glow blob */
   --glow-2: rgba(114, 136, 174, 0.30); /* slate glow blob */
+
+  /* Movie-title "nameplate" in the modal. Dark mode leans beige (cream plate,
+     navy letters); light mode flips to blue (see [data-theme='light']). */
+  --title-plate-bg: var(--cream);
+  --title-plate-text: var(--navy);
 }
 
 /*
@@ -101,6 +106,9 @@
   --link: #3c4685;                /* deep indigo link, visible on light */
   --glow-1: rgba(75, 86, 148, 0.18);
   --glow-2: rgba(114, 136, 174, 0.16);
+  /* Title nameplate flips to "more blue" in light mode: indigo plate, cream text. */
+  --title-plate-bg: var(--indigo);
+  --title-plate-text: var(--cream);
   /* --accent / --accent-text intentionally unchanged: cream stays the brand. */
 }
 
