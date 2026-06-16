@@ -42,6 +42,32 @@ const App = () => {
   const [detailsLoading, setDetailsLoading] = useState(false)
   const [detailsError, setDetailsError] = useState(null)
 
+  // Favorites & Watched (stretch). Each is a Set of movie IDs — Sets make
+  // membership checks (favorites.has(id)) cheap and de-dupe for free. Not
+  // persisted: they reset on reload, which is the spec's intent.
+  const [favorites, setFavorites] = useState(() => new Set())
+  const [watched, setWatched] = useState(() => new Set())
+
+  // Toggle helpers. We build a NEW Set each time — mutating the existing one
+  // in place wouldn't change its identity, so React wouldn't re-render.
+  const toggleFavorite = (id) => {
+    setFavorites((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleWatched = (id) => {
+    setWatched((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const fetchMovies = async (pageToFetch, searchQuery) => {
     const baseUrl = searchQuery 
     ? `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(searchQuery)}`
@@ -158,7 +184,14 @@ const App = () => {
             <span className="section-count">{sortedMovies.length} films</span>
           </header>
 
-          <MovieList movies={sortedMovies} onCardClick={handleCardClick} />
+          <MovieList
+            movies={sortedMovies}
+            onCardClick={handleCardClick}
+            favorites={favorites}
+            watched={watched}
+            onToggleFavorite={toggleFavorite}
+            onToggleWatched={toggleWatched}
+          />
           {page < totalPages && (
             <button className="load-more" onClick={handleLoadMore}>
               Load More

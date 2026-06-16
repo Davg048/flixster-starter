@@ -75,6 +75,16 @@
      navy letters); light mode flips to blue (see [data-theme='light']). */
   --title-plate-bg: var(--cream);
   --title-plate-text: var(--navy);
+
+  /* Favorite / watched marking. Favorite uses a warm rose so it reads as a
+     "heart"; watched uses the cream accent. Both work over either theme. */
+  --favorite: #ff6b81;
+  --watched: var(--cream);
+
+  /* Corner chips (rating pill + action buttons) sit on top of poster images,
+     so they need a NEAR-OPAQUE background — otherwise a bright poster shows
+     through and the icons lose contrast. Tokenized so both themes can tune it. */
+  --chip-bg: rgba(17, 24, 68, 0.92);
 }
 
 /*

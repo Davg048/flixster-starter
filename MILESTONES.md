@@ -20,6 +20,7 @@
 - [Milestone 6 — Header & Footer](#milestone-6--header--footer)
 - [Milestone 7 — Visual design: glassmorphism, hierarchy & accessibility](#milestone-7--visual-design-glassmorphism-hierarchy--accessibility)
 - [Milestone 8 — AI "Worth seeing?" insight (+ light mode)](#milestone-8--ai-worth-seeing-insight--light-mode)
+- [Stretch — Favorites & Watched](#stretch--favorites--watched)
 - [Cross-cutting lessons](#cross-cutting-lessons)
 
 ---
@@ -518,6 +519,78 @@ palette inversion works (white glass vanishes on a light background) and that
   `theme` state lazy-inits from localStorage→`prefers-color-scheme` and reflects to
   `<html>`; an inline IIFE in `index.html` prevents FOUC. Cream accent invariant;
   focus ring/links darken in light. All theming verified WCAG AA in both modes.
+
+---
+
+## Stretch — Favorites & Watched
+
+*Files: `App.jsx`, `MovieList.jsx`, `MovieCard.jsx/.css`, `index.css`*
+
+Two features built together because they're **one pattern applied twice**: a
+per-card toggle whose on/off state lives in `App` and visually marks the card.
+Intentionally **not persisted** — they reset on reload (per the spec).
+
+### 1. Detailed code walkthrough
+- **State in `App`:** two `Set`s of movie IDs (`favorites`, `watched`). A `Set`
+  gives O(1) `has(id)` membership checks (run for every card on every render) and
+  can't hold duplicates. Created with a lazy initializer `useState(() => new Set())`.
+- **Toggle = copy-on-write:** the updater builds a `new Set(prev)`, adds/deletes
+  the id, and returns it. The *new identity* is what tells React to re-render —
+  mutating the old Set in place would be invisible to React's bail-out check.
+- **Prop chain:** `App` → `MovieList` (computes `favorites.has(movie.id)` per card)
+  → `MovieCard` (renders two `aria-pressed` buttons + applies `is-favorite`/
+  `is-watched` classes).
+- **The bubbling fix:** the buttons live inside the card, which is itself a
+  clickable "open modal" element. `handleToggle` calls `e.stopPropagation()` so a
+  click on the heart/eye doesn't *also* open the modal.
+- **Visual marking (CSS):** favorited = rose inset ring; watched = dimmed poster +
+  a "WATCHED" ribbon via `::after`. Buttons are top-left frosted chips (rating pill
+  owns top-right).
+
+### 2. Critical highlights
+- **`e.stopPropagation()`** — without it, every favorite click also opens the modal.
+- **Copy-then-return Set** — without a new reference, the UI never updates.
+- **Adversarial review caught real bugs before commit** (see below).
+
+### 3. The "Student Challenge" perspective
+Two classic traps: **event bubbling inside a clickable container** (clicking the
+heart mysteriously opens the modal, because DOM events flow child→parent), and
+**"why won't my Set re-render?"** (mutating state in place produces the same
+reference, so React skips the repaint). Both are invisible at a glance and only
+surface at runtime — which is exactly why this feature got an adversarial review.
+
+### 4. Dual explanations
+- **Beginner:** Each card gets a heart and an eye. The heart outlines the card in
+  rose; the eye dims the poster and adds a "WATCHED" badge. The tricky bit: those
+  buttons sit on a card that's already a big "click to open details" button, so I
+  had to stop their clicks from leaking through. Marks reset on reload (intended).
+- **Developer:** Two `Set<number>` in `App`, toggled copy-on-write for referential
+  change; `MovieList` derives per-card booleans and forwards callbacks; `MovieCard`
+  renders `aria-pressed` buttons with `stopPropagation` (click) + a keydown guard,
+  driving conditional `is-favorite`/`is-watched` classes. Ephemeral by design.
+
+### What the adversarial review caught (and how it was fixed)
+Before committing, an automated adversarial review attacked this feature across
+event-handling, state-identity, a11y, and edge-case lenses, verifying each finding
+against the real code. It surfaced **3 genuine bugs** my first pass missed:
+
+1. **(HIGH) Keyboard opened the modal unintentionally.** `stopPropagation()` only
+   covered the *click* — pressing Enter/Space on a focused heart/eye button let the
+   *keydown* bubble to the card's `onKeyDown`, opening the modal too. **Fix:** guard
+   the card handler with `if (e.target !== e.currentTarget) return` so it only acts
+   when the card *itself* is focused, plus `preventDefault()` for Space.
+2. **(HIGH) Active heart lost contrast over bright posters.** The chip was only 70%
+   opaque, so a light poster showed through and the rose heart dropped to ~2.34:1
+   (below the 3:1 minimum). **Fix:** a near-opaque `--chip-bg` token (92%) — pushes
+   the heart back to ~5.3:1 regardless of poster.
+3. **(LOW) Chip color wasn't tokenized**, breaking the theme-system contract.
+   **Fix:** the same `--chip-bg` token, now used by both the rating pill and action
+   buttons.
+
+**The lesson:** the two HIGH bugs were *runtime* and *accessibility* issues
+invisible in a code skim — a build passing and "it works when I click with a mouse"
+would have hidden both. Reviewing against the actual failure modes (keyboard,
+contrast) is what caught them.
 
 ---
 
