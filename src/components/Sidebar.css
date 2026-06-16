@@ -1,0 +1,146 @@
+/* Dimmed backdrop behind the open drawer. */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  z-index: 900;
+}
+
+/* The drawer slides in from the right. It's always in the DOM; the .is-open
+   class slides it on-screen, so it animates open AND closed. */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(360px, 85vw);
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md);
+  overflow-y: auto;
+  background-color: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--glass-border);
+  color: var(--text-on-dark);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.is-open {
+  transform: translateX(0);
+}
+
+/* Honor reduced-motion: appear/disappear without the slide. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.sidebar-head h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.sidebar-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 14px;
+}
+
+.sidebar-section {
+  margin-bottom: var(--space-lg);
+}
+
+.sidebar-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-sm);
+}
+
+.sidebar-section-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.sidebar-count {
+  font-size: 0.8rem;
+  color: var(--text-on-dark-muted);
+}
+
+/* Push the filter button to the right edge of the section header. */
+.sidebar-filter {
+  margin-left: auto;
+  font-size: 0.78rem;
+  padding: 5px 10px;
+}
+
+.sidebar-filter[aria-pressed='true'] {
+  background-color: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.sidebar-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-on-dark-muted);
+}
+
+.sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Each list row is a button: poster thumb + title, opens the movie modal. */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px;
+  text-align: left;
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.sidebar-item:hover {
+  background-color: var(--glass-bg-strong);
+}
+
+.sidebar-thumb {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.sidebar-item-title {
+  /* Clamp long titles to 2 lines so rows stay tidy. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

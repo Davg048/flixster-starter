@@ -6,6 +6,7 @@ import MovieModal from './components/MovieModal'
 import SortControl from './components/SortControl'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import Sidebar from './components/Sidebar'
 
 
 // Decide the starting theme ONCE (lazy initializer): a saved choice wins;
@@ -68,6 +69,24 @@ const App = () => {
     })
   }
 
+  // Registry of every movie we've fetched, keyed by id. favorites/watched only
+  // store IDs, but the sidebar needs full movie objects to show poster+title —
+  // and a movie you favorited in Search results won't be in the current Now
+  // Playing `movies` array. This cache lets us resolve any favorited/watched id
+  // back to its object regardless of the current view.
+  const [moviesById, setMoviesById] = useState(() => new Map())
+
+  // Sidebar drawer open/closed, and which list (if any) filters the main grid.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [filterMode, setFilterMode] = useState('all') // 'all' | 'favorites' | 'watched'
+
+  // If the active filter's list becomes empty (e.g. you un-favorited the last
+  // one), drop back to 'all' so the grid is never stranded empty with no escape.
+  useEffect(() => {
+    if (filterMode === 'favorites' && favorites.size === 0) setFilterMode('all')
+    if (filterMode === 'watched' && watched.size === 0) setFilterMode('all')
+  }, [filterMode, favorites, watched])
+
   const fetchMovies = async (pageToFetch, searchQuery) => {
     const baseUrl = searchQuery 
     ? `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(searchQuery)}`
@@ -81,6 +100,14 @@ const App = () => {
       pageToFetch === 1 ? data.results : [...prevMovies, ...data.results]
   )
   setTotalPages(data.total_pages)
+
+  // Record every fetched movie in the id→movie registry so the sidebar can
+  // resolve favorited/watched IDs even after we switch views.
+  setMoviesById((prev) => {
+    const next = new Map(prev)
+    for (const movie of data.results) next.set(movie.id, movie)
+    return next
+  })
   }
     // Run once on mount: load page 1 of Now Playing (empty query = Now Playing)
     useEffect(() => {
@@ -91,13 +118,15 @@ const App = () => {
     const handleSearch = (searchQuery) => {
       setQuery(searchQuery)
       setPage(1)
+      setFilterMode('all') // searching exits any sidebar filter
       fetchMovies(1, searchQuery)
     }
-  
+
     // Called when the user clears search / clicks "Now Playing"
     const handleClear = () => {
       setQuery('')
       setPage(1)
+      setFilterMode('all') // returning to Now Playing exits any filter
       fetchMovies(1, '')
     }
   
@@ -147,24 +176,41 @@ const App = () => {
       fetchDetails()
     }, [selectedMovieId])
 
-    // Sort a COPY of movies just before rendering (don't mutate state).
-    // "none" leaves the original API order untouched.
-    const sortedMovies = [...movies].sort((a, b) => {
-      if (sortOption === 'title') {
-        return a.title.localeCompare(b.title)
-      }
-      if (sortOption === 'release_date') {
-        return b.release_date.localeCompare(a.release_date) // newest first
-      }
-      if (sortOption === 'vote_average') {
-        return b.vote_average - a.vote_average // highest first
-      }
-      return 0 // "none": keep original order
-    })
+    // Sort a COPY of any movie list (don't mutate state). Reused for both the
+    // main grid and the filtered views so ordering is consistent everywhere.
+    const sortMovies = (list) =>
+      [...list].sort((a, b) => {
+        if (sortOption === 'title') return a.title.localeCompare(b.title)
+        if (sortOption === 'release_date') return b.release_date.localeCompare(a.release_date) // newest first
+        if (sortOption === 'vote_average') return b.vote_average - a.vote_average // highest first
+        return 0 // "none": keep original order
+      })
 
-    // Label + count for the section header. Reflects whether we're showing
-    // search results or the default Now Playing list.
-    const sectionTitle = query ? `Results for "${query}"` : 'Now Playing'
+    // Resolve favorited/watched IDs to full movie objects via the registry.
+    // filter(Boolean) drops any id we can't resolve yet (defensive).
+    const favoriteMovies = [...favorites].map((id) => moviesById.get(id)).filter(Boolean)
+    const watchedMovies = [...watched].map((id) => moviesById.get(id)).filter(Boolean)
+
+    // The grid: when filtered, draw from the SAME registry-backed lists the
+    // sidebar uses (not the current view) so the grid and sidebar always agree
+    // and a filter can never strand the grid empty after switching views.
+    const visibleMovies =
+      filterMode === 'favorites'
+        ? sortMovies(favoriteMovies)
+        : filterMode === 'watched'
+        ? sortMovies(watchedMovies)
+        : sortMovies(movies)
+
+    // Label + count for the section header. Reflects search vs Now Playing,
+    // and whether a sidebar filter is active.
+    const sectionTitle =
+      filterMode === 'favorites'
+        ? 'Favorites'
+        : filterMode === 'watched'
+        ? 'Watched'
+        : query
+        ? `Results for "${query}"`
+        : 'Now Playing'
 
     return (
       <div className="App">
@@ -175,24 +221,43 @@ const App = () => {
           <div className="toolbar">
             <SearchBar onSearch={handleSearch} onClear={handleClear} />
             <SortControl sortOption={sortOption} onSortChange={setSortOption} />
+            <button
+              type="button"
+              className="lists-toggle"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              ☰ Your Lists ({favorites.size + watched.size})
+            </button>
           </div>
 
           {/* Section header turns the wall of posters into a labeled section
-              and gives a live result count. */}
+              and gives a live result count. When a sidebar filter is active,
+              show an on-grid "Clear filter" so the user is never stuck. */}
           <header className="section-head">
             <h2 className="section-title">{sectionTitle}</h2>
-            <span className="section-count">{sortedMovies.length} films</span>
+            <span className="section-count">{visibleMovies.length} films</span>
+            {filterMode !== 'all' && (
+              <button
+                type="button"
+                className="clear-filter"
+                onClick={() => setFilterMode('all')}
+              >
+                Clear filter ✕
+              </button>
+            )}
           </header>
 
           <MovieList
-            movies={sortedMovies}
+            movies={visibleMovies}
             onCardClick={handleCardClick}
             favorites={favorites}
             watched={watched}
             onToggleFavorite={toggleFavorite}
             onToggleWatched={toggleWatched}
           />
-          {page < totalPages && (
+          {/* Hide Load More while a sidebar filter is active — paginating would
+              fetch more Now Playing movies into a filtered view. */}
+          {filterMode === 'all' && page < totalPages && (
             <button className="load-more" onClick={handleLoadMore}>
               Load More
             </button>
@@ -207,6 +272,16 @@ const App = () => {
           )}
         </main>
         <Footer />
+
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          favoriteMovies={favoriteMovies}
+          watchedMovies={watchedMovies}
+          filterMode={filterMode}
+          onFilter={setFilterMode}
+          onSelectMovie={handleCardClick}
+        />
       </div>
     )
   

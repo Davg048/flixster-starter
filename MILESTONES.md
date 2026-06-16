@@ -21,6 +21,7 @@
 - [Milestone 7 — Visual design: glassmorphism, hierarchy & accessibility](#milestone-7--visual-design-glassmorphism-hierarchy--accessibility)
 - [Milestone 8 — AI "Worth seeing?" insight (+ light mode)](#milestone-8--ai-worth-seeing-insight--light-mode)
 - [Stretch — Favorites & Watched](#stretch--favorites--watched)
+- [Stretch — Sidebar (lists & grid filter)](#stretch--sidebar-lists--grid-filter)
 - [Cross-cutting lessons](#cross-cutting-lessons)
 
 ---
@@ -591,6 +592,87 @@ against the real code. It surfaced **3 genuine bugs** my first pass missed:
 invisible in a code skim — a build passing and "it works when I click with a mouse"
 would have hidden both. Reviewing against the actual failure modes (keyboard,
 contrast) is what caught them.
+
+---
+
+## Stretch — Sidebar (lists & grid filter)
+
+*Files: `Sidebar.jsx/.css`, `App.jsx`, `App.css`*
+
+A slide-in drawer listing your Favorites + Watched movies, with buttons to filter
+the main grid by either list. Builds directly on the Favorites/Watched feature.
+
+### 1. Detailed code walkthrough
+- **The registry (`moviesById`).** The key insight: `favorites`/`watched` only
+  store *IDs*, but the sidebar needs full movie *objects* — and a movie you
+  favorited in Search results isn't in the current Now Playing `movies` array.
+  So `App` keeps a `Map` of every fetched movie (accumulated inside `fetchMovies`),
+  and resolves `favoriteMovies = [...favorites].map(id => moviesById.get(id))`.
+- **One source of truth for the filtered grid.** When a filter is active, the
+  grid draws from the *same* registry-backed `favoriteMovies`/`watchedMovies`
+  arrays the sidebar uses (not the current view) — so the grid and sidebar can
+  never disagree.
+- **`Sidebar`** is a drawer that stays in the DOM and slides via an `.is-open`
+  class (so it animates both ways). Each list row opens the movie's modal.
+- **Filter state** (`filterMode`: `'all' | 'favorites' | 'watched'`) narrows the
+  grid; an on-grid "Clear filter" button and several auto-resets prevent dead-ends.
+
+### 2. Critical highlights
+- **The `moviesById` registry** — without it, favoriting in Search then switching
+  to Now Playing would make the favorite *vanish* from the sidebar.
+- **Resolving the filtered grid from the registry, not the view** — the single
+  change that makes the grid and sidebar consistent.
+- **Drawer accessibility** (focus management, `inert`, Escape) — see below.
+
+### 3. The "Student Challenge" perspective
+Two hard parts. (1) **The view/registry split:** beginners filter the grid against
+the *current* `movies` array, which works in the demo but strands the grid empty
+the moment you switch views — a bug that only appears through a specific sequence
+of actions. (2) **Drawer accessibility:** a drawer that's visually hidden with
+`transform: translateX(100%)` is still *in the DOM and Tab-focusable* — so keyboard
+users tab into an invisible panel. Making it truly inert, managing focus on
+open/close, and wiring Escape are all easy to forget and invisible to a
+mouse-only test.
+
+### 4. Dual explanations
+- **Beginner:** A slide-out panel on the right lists your hearted and watched
+  movies, and can filter the main grid to just those. The clever bit: we keep a
+  little address book of every movie we've ever loaded, so your favorites never
+  disappear even if you favorited them while searching and then went back home.
+- **Developer:** A `moviesById` Map registry decouples the favorite/watched ID
+  Sets from object availability across views; filtered grid and sidebar both
+  resolve from it (single source of truth). `Sidebar` is a token-themed drawer
+  with imperative `inert` toggling (React 18 doesn't forward the JSX prop),
+  open/close focus management via a `[isOpen]`-keyed effect (with `onClose` held
+  in a ref to avoid re-run churn), and Escape-to-close mirroring the modal.
+
+### What the adversarial review caught (and how it was fixed)
+This feature touched far more interacting state, and the review surfaced **11
+confirmed issues** (several overlapping), in two clusters:
+
+**Cluster A — filter/view desync (HIGH):** the grid filtered the *current view*
+while the sidebar used the *global registry*, so they disagreed; switching views
+or unfavoriting the last item could strand the grid empty with no escape. **Fixed**
+by resolving the filtered grid from the same registry-backed lists, resetting
+`filterMode` on search/clear, an auto-reset effect when a filter empties, and an
+on-grid "Clear filter" button.
+
+**Cluster B — drawer accessibility (HIGH):** the closed drawer kept focusable
+buttons in the tab order (focus trap + an `aria-hidden`-on-focusable violation);
+focus didn't move in on open or return on close; Escape didn't close it. **Fixed**
+with imperative `inert` (React 18 doesn't forward the prop), focus-in on open,
+focus-return on close, and an Escape handler.
+
+**A bug the fix itself introduced** (caught on re-verification): because `onClose`
+is a fresh closure each render, the focus effect re-ran while open and overwrote
+the captured trigger with the in-drawer close button — so focus would return to an
+*inert* element. **Re-fixed** by holding `onClose` in a ref and capturing the
+trigger in a local `const`, so the effect keys on `[isOpen]` alone.
+
+**The lesson:** the more pieces of state interact, the more the bugs live in the
+*seams between features* (filter × search × sort × pagination) and in the
+*non-mouse* paths (keyboard, focus) — none of which a passing build or a quick
+mouse test reveals.
 
 ---
 
