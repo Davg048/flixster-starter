@@ -10,12 +10,13 @@
 
 | # | Slide | Time | Running total |
 |---|-------|------|---------------|
-| 1 | Title / Intro | 0:45 | 0:45 |
-| 2 | **Live Demo** (the star) | 2:45 | 3:30 |
-| 3 | Under the Hood (optional — skip if behind) | 0:45 | 4:15 |
-| 4 | Reflection (Favorite / Challenging / Next) | 0:45 | 5:00 |
+| 1 | Title / Intro | 0:40 | 0:40 |
+| 2 | **Live Demo** (the star) | 2:30 | 3:10 |
+| 3 | Under the Hood (optional — skip if behind) | 0:35 | 3:45 |
+| 4 | Code spotlight (shows understanding) | 0:40 | 4:25 |
+| 5 | Reflection (Favorite / Challenging / Next) | 0:35 | 5:00 |
 
-> If you're running long, **cut slide 3** — the demo and reflection are what matter.
+> If you're running long, **cut slide 3 (Under the Hood)** — the demo, the code slide, and the reflection are what matter. Slide 3 and Slide 4 overlap, so keeping the code slide and dropping "Under the Hood" is a clean trim.
 
 ---
 
@@ -23,9 +24,9 @@
 
 This is the part most people skip and regret. Five minutes goes fast and live demos break.
 
-- [ ] **App is already running** (`npm run dev`) and the browser tab is open to the loaded grid — never start a demo on a blank/loading screen.
-- [ ] **Pre-load the page once** so the "Now Playing" movies are cached and posters are visible.
-- [ ] **⚠️ Test the AI feature right before you go on.** The OpenRouter free tier can rate-limit (HTTP 429). Open a movie, confirm the "✨ Worth seeing?" blurb appears. If it's slow/failing, see the fallback plan below.
+- [x] **App is already running** (`npm run dev`) and the browser tab is open to the loaded grid — never start a demo on a blank/loading screen.
+- [x] **Pre-load the page once** so the "Now Playing" movies are cached and posters are visible.
+- [x] **⚠️ Test the AI feature right before you go on.** The OpenRouter free tier can rate-limit (HTTP 429). Open a movie, confirm the "✨ Worth seeing?" blurb appears. If it's slow/failing, see the fallback plan below.
 - [ ] **Have a backup**: a screen recording (Loom/QuickTime) or screenshots of the app working, in case the WiFi or API dies mid-demo.
 - [ ] **Zoom your browser to ~110–125%** so the audience can read it on a projector.
 - [ ] **Close other tabs / silence notifications.**
@@ -93,7 +94,23 @@ The deployed-site URL (like the sample's `github.io` link) requires the **Render
 
 ---
 
-## 🖥️ SLIDE 4 — Reflection  *(0:45)*  *(matches CodePath sample slide 2)*
+## 🖥️ SLIDE 4 — Code Spotlight  *(0:40)*  ⭐ shows you understand your own code
+
+**On the slide:** the `toggleFavorite` snippet (8 lines) + a "Why it matters" panel + a one-line caption. This is the slide that separates "I made it work" from "I understand why it works."
+
+**Say this (≈80 words):**
+> "I want to show one piece of code. **Favorites** is the state that everything else reads — the filter, the search, the sort. The bug I had to avoid was mutating that state in place. If I'd called `prev.add(id)` directly, React compares state by reference, sees the *same* Set, and skips the re-render — the star toggles in memory but the screen goes stale. So every toggle I build a **new** Set, add or delete the id, and return it. New reference, guaranteed re-render. That discipline is what kept favorites from desyncing while everything re-rendered around it."
+
+**⚠️ Be ready for these follow-ups** (you can answer all three from React basics):
+- *"Why a new Set instead of `prev.add(id)`?"* → React compares by reference (`Object.is`); mutating keeps the same identity so it skips the re-render. New Set = new reference = update.
+- *"Why the `prev => …` updater form?"* → It reads the latest state at update time, so rapid toggles don't operate on a stale closure value.
+- *"Why a Set, not an array?"* → `has`/`add`/`delete` are O(1) and a Set can't hold duplicates, so no double-membership bugs.
+
+**Delivery:** Point at the `new Set(prev)` line when you say "new reference." Don't rush — this is the slide where 30 slow seconds beats 15 fast ones. *(Runner-up snippet if you'd rather: the async `ignore`-flag race guard — but only use it if you can confidently say "the flag discards the stale result, it doesn't cancel the fetch.")*
+
+---
+
+## 🖥️ SLIDE 5 — Reflection  *(0:35)*  *(matches CodePath sample slide 2)*
 
 Three boxes: **Favorite Feature** (blue) · **Most Challenging** (green) · **Next Steps** (yellow).
 
@@ -101,10 +118,10 @@ Three boxes: **Favorite Feature** (blue) · **Most Challenging** (green) · **Ne
 |-----|---------|
 | **⭐ Favorite Feature** | The **AI "Worth seeing?" insight.** It's what makes this a *discovery* tool, not just a list — and wiring an LLM into a React component with loading + fallback states taught me the most. |
 | **🧗 Most Challenging** | **State that interacts.** Favorites + filters + search + sort all touch each other, and the bugs lived in the *seams* — a code review found 11 issues in the sidebar alone (an async race, keyboard focus traps). Fixing them taught me to test the non-obvious paths. |
-| **🚀 Next Steps** | **Deploy to Render** for a live link · **embedded YouTube trailers** in the modal · **persist favorites** (localStorage) so they survive a reload. |
+| **🚀 Next Steps** | **Deploy to Render** for a live link · **persist favorites** (localStorage) so they survive a reload · **user accounts / saved lists**. |
 
 **Say this (≈95 words):**
-> "To wrap up — my **favorite feature** is the AI recommendation; it's the soul of the app and taught me how to handle async AI calls with proper loading and fallback states. The **most challenging** part wasn't any single feature — it was managing state that all interacts. Favorites, filtering, search, and sort all touch each other, and the tricky bugs hid in the seams between them; a code review caught eleven issues in the sidebar alone. **Next**, I'd deploy it for a live link, embed trailers, and make favorites persist across reloads. Thanks — happy to take questions!"
+> "To wrap up — my **favorite feature** is the AI recommendation; it's the soul of the app and taught me how to handle async AI calls with proper loading and fallback states. The **most challenging** part wasn't any single feature — it was managing state that all interacts, like I just showed: favorites, filtering, search, and sort all touch each other, and the tricky bugs hid in the seams between them; a code review caught eleven issues in the sidebar alone. **Next**, I'd deploy it for a live link and make favorites persist across reloads. Thanks — happy to take questions!"
 
 **Delivery:** End on **"Next Steps"** energy — it shows you think like a builder. Land the last line, make eye contact, stop talking. Don't trail off.
 
