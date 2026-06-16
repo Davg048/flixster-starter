@@ -109,6 +109,22 @@
   color: var(--text-on-dark);
 }
 
+/* Embedded trailer: keep a 16:9 box regardless of modal width. */
+.modal-trailer {
+  margin: 20px var(--pad) 0;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background-color: #000;
+}
+
+.modal-trailer-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
 /* AI "Worth seeing?" panel — a subtly tinted card set off from the overview,
    with a cream left border so it reads as the app's signature feature. */
 .ai-insight {

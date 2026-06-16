@@ -22,6 +22,7 @@
 - [Milestone 8 — AI "Worth seeing?" insight (+ light mode)](#milestone-8--ai-worth-seeing-insight--light-mode)
 - [Stretch — Favorites & Watched](#stretch--favorites--watched)
 - [Stretch — Sidebar (lists & grid filter)](#stretch--sidebar-lists--grid-filter)
+- [Stretch — Embedded trailers](#stretch--embedded-trailers)
 - [Cross-cutting lessons](#cross-cutting-lessons)
 
 ---
@@ -673,6 +674,55 @@ trigger in a local `const`, so the effect keys on `[isOpen]` alone.
 *seams between features* (filter × search × sort × pagination) and in the
 *non-mouse* paths (keyboard, focus) — none of which a passing build or a quick
 mouse test reveals.
+
+---
+
+## Stretch — Embedded trailers
+
+*Files: `MovieModal.jsx/.css`*
+
+A YouTube trailer embedded in the movie modal, fetched from TMDb's videos
+endpoint. This one was deliberately built to *mirror the AI-insight pattern* —
+same shape, so it was low-risk.
+
+### 1. Detailed code walkthrough
+- **`getMovieTrailer(id)`** fetches `/movie/{id}/videos`, then picks the best clip
+  by **preference order**: an *official* YouTube "Trailer" → any YouTube Trailer →
+  any YouTube Teaser. Returns the video `key` or `null`. Wrapped in try/catch so
+  any failure returns `null` (the section just hides — no broken UI).
+- **State + effect:** a `trailerKey` state and a `useEffect` keyed on `movie?.id`,
+  with the same `ignore` race-guard and a `setTrailerKey(null)` reset at the start
+  (so the previous movie's trailer doesn't flash while the new one loads).
+- **Display:** `{trailerKey && (<iframe .../>)}` — a YouTube embed
+  (`youtube.com/embed/{key}`) in a 16:9 wrapper (`aspect-ratio: 16/9`), only
+  rendered when a trailer exists. A `key={trailerKey}` forces a fresh iframe per
+  trailer so a swapped `src` can never reuse a stale (autoplaying) video.
+
+### 2. Critical highlights
+- **The preference-order pick** — TMDb returns many videos (featurettes, clips,
+  teasers); choosing the official trailer first is what makes it feel curated.
+- **Graceful absence** — many movies have no trailer; returning `null` and
+  hiding the section (vs. an empty player) is the right default.
+- **`key={trailerKey}` on the iframe** — guarantees the embed remounts per movie.
+
+### 3. The "Student Challenge" perspective
+The conceptual trap is **iframe reuse across renders**: React reconciliation will
+happily keep the same `<iframe>` DOM node and just swap its `src` when you open a
+different movie — which can leave the *previous* trailer briefly playing (even with
+audio). The fix (`key` prop to force a remount) is invisible until you experience
+the bug. The runner-up is realizing the videos endpoint is a *separate* call with
+its own messy data (you must filter by `site === 'YouTube'` and `type`).
+
+### 4. Dual explanations
+- **Beginner:** When you open a movie, the app asks the database "got a trailer?"
+  and, if so, drops a real YouTube player right into the pop-up. If there's no
+  trailer, it just shows nothing rather than an empty box.
+- **Developer:** A `getMovieTrailer` helper hits TMDb's videos endpoint and
+  resolves the best YouTube key via a typed preference cascade; a `[movie?.id]`
+  effect with an `ignore` guard + null-reset populates `trailerKey`, rendered as a
+  conditionally-mounted, `aspect-ratio`-boxed YouTube `<iframe>` keyed by trailer
+  to force remounts. Verified with a focused review (race, null-handling, iframe
+  reuse).
 
 ---
 

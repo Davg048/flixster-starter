@@ -51,6 +51,29 @@ async function getMovieInsight(title, genres, overview) {
   }
 }
 
+// Fetches the movie's videos from TMDb and returns the YouTube key of the best
+// trailer, or null if there isn't one. Preference order: an OFFICIAL YouTube
+// trailer → any YouTube trailer → any YouTube teaser. Returns null on any
+// failure or if no suitable video exists (the modal just hides the section).
+async function getMovieTrailer(id) {
+  const API_KEY = import.meta.env.VITE_API_KEY
+  try {
+    const url = `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}&language=en-US`
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`Videos request failed (${response.status})`)
+    const data = await response.json()
+    const videos = data.results || []
+    const pick =
+      videos.find((v) => v.site === 'YouTube' && v.type === 'Trailer' && v.official) ||
+      videos.find((v) => v.site === 'YouTube' && v.type === 'Trailer') ||
+      videos.find((v) => v.site === 'YouTube' && v.type === 'Teaser')
+    return pick ? pick.key : null
+  } catch (err) {
+    console.error('Trailer fetch failed:', err)
+    return null
+  }
+}
+
 // MovieModal is presentational: App fetches the details and passes them in.
 // Props:
 //   movie   - the detailed movie object (or null while loading)
@@ -62,6 +85,9 @@ const MovieModal = ({ movie, loading, error, onClose }) => {
   // when the modal unmounts on close (see planning.md §5).
   const [aiInsight, setAiInsight] = useState(null)
   const [loadingInsight, setLoadingInsight] = useState(false)
+
+  // YouTube key for the embedded trailer (null = none / still loading).
+  const [trailerKey, setTrailerKey] = useState(null)
 
   // Let the user press Escape to close the modal.
   useEffect(() => {
@@ -93,6 +119,23 @@ const MovieModal = ({ movie, loading, error, onClose }) => {
       .finally(() => {
         if (!ignore) setLoadingInsight(false)
       })
+
+    return () => {
+      ignore = true
+    }
+  }, [movie?.id])
+
+  // Fetch the trailer key when the movie changes. Same `ignore` race guard so a
+  // slow response from a previous movie can't land in the wrong modal.
+  useEffect(() => {
+    if (!movie || !movie.id) return
+
+    let ignore = false
+    setTrailerKey(null)
+
+    getMovieTrailer(movie.id).then((key) => {
+      if (!ignore) setTrailerKey(key)
+    })
 
     return () => {
       ignore = true
@@ -141,6 +184,21 @@ const MovieModal = ({ movie, loading, error, onClose }) => {
               </div>
             )}
             <p className="modal-overview">{movie.overview}</p>
+
+            {/* Embedded YouTube trailer — only shown when one exists. The
+                wrapper keeps a 16:9 aspect ratio as the modal width changes. */}
+            {trailerKey && (
+              <div className="modal-trailer">
+                <iframe
+                  key={trailerKey}
+                  className="modal-trailer-frame"
+                  src={`https://www.youtube.com/embed/${trailerKey}`}
+                  title={`${movie.title} trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
 
             {/* AI "Worth seeing?" take. Shows a loading line during the call,
                 then the recommendation (or the fallback string on failure). */}
