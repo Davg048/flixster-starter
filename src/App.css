@@ -2,11 +2,29 @@
   text-align: left;
 }
 
-/* Centered max-width content column with breathing room on the sides. */
-.page {
+/* Two-column shell: sidebar nav + the active page, centered with a max width. */
+.layout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--space-lg) clamp(var(--space-md), 5vw, var(--space-xl));
+}
+
+/* The page column grows to fill the space beside the sidebar. min-width:0
+   lets the grid shrink instead of overflowing the flex row. */
+.page {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Empty Favorites/Watched page message. */
+.empty-state {
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--text-on-dark-muted);
 }
 
 /* Search + sort grouped into one row; wraps to stacked on narrow screens. */
@@ -61,20 +79,16 @@
   background-color: #f3ecdd;
 }
 
-/* "Your Lists" sidebar toggle — sits at the end of the toolbar row. */
-.lists-toggle {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-/* On-grid escape from an active sidebar filter. */
-.clear-filter {
-  font-size: 0.78rem;
-  padding: 5px 12px;
-  white-space: nowrap;
-}
-
 /* .App-header styles now live in components/Header.css */
+
+/* Stack the sidebar above the page on narrow screens (matches Sidebar.css's
+   760px breakpoint where the rail becomes a horizontal row). */
+@media (max-width: 760px) {
+  .layout {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+}
 
 @media (max-width: 600px) {
   .toolbar {

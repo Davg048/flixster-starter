@@ -26,7 +26,7 @@ const SearchBar = ({ onSearch, onClear }) => {
           placeholder="Search movies..."
         />
         <button type="submit">Search</button>
-        <button type="button" onClick={handleClear}>Now Playing</button>
+        <button type="button" onClick={handleClear}>Clear</button>
       </form>
     </div>
   )

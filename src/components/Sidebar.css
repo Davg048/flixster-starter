@@ -1,146 +1,95 @@
-/* Dimmed backdrop behind the open drawer. */
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: var(--overlay-bg);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  z-index: 900;
-}
-
-/* The drawer slides in from the right. It's always in the DOM; the .is-open
-   class slides it on-screen, so it animates open AND closed. */
+/* Persistent left navigation rail. Sticky so it stays in view while the movie
+   grid scrolls. Frosted glass to match the rest of the chrome. */
 .sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  width: min(360px, 85vw);
-  z-index: 950;
-  display: flex;
-  flex-direction: column;
+  position: sticky;
+  top: 88px;            /* clears the sticky header */
+  align-self: flex-start;
+  flex: 0 0 200px;
   padding: var(--space-md);
-  overflow-y: auto;
   background-color: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border-left: 1px solid var(--glass-border);
-  color: var(--text-on-dark);
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
 }
 
-.sidebar.is-open {
-  transform: translateX(0);
-}
-
-/* Honor reduced-motion: appear/disappear without the slide. */
-@media (prefers-reduced-motion: reduce) {
-  .sidebar {
-    transition: none;
-  }
-}
-
-.sidebar-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-md);
-}
-
-.sidebar-head h2 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.sidebar-close {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 14px;
-}
-
-.sidebar-section {
-  margin-bottom: var(--space-lg);
-}
-
-.sidebar-section-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: var(--space-sm);
-}
-
-.sidebar-section-head h3 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.sidebar-count {
-  font-size: 0.8rem;
-  color: var(--text-on-dark-muted);
-}
-
-/* Push the filter button to the right edge of the section header. */
-.sidebar-filter {
-  margin-left: auto;
-  font-size: 0.78rem;
-  padding: 5px 10px;
-}
-
-.sidebar-filter[aria-pressed='true'] {
-  background-color: var(--accent);
-  color: var(--accent-text);
-  border-color: var(--accent);
-}
-
-.sidebar-empty {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-on-dark-muted);
-}
-
-.sidebar-list {
+.sidebar-nav {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* Each list row is a button: poster thumb + title, opens the movie modal. */
-.sidebar-item {
+/* Each page link: icon + label + optional count badge. */
+.sidebar-link {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 6px;
+  padding: 10px 12px;
   text-align: left;
-  background-color: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-on-dark);
+  background-color: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  font-weight: 500;
-  font-size: 0.9rem;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-.sidebar-item:hover {
+.sidebar-link:hover {
+  background-color: var(--glass-bg);
+}
+
+/* The active page is filled with the cream accent. */
+.sidebar-link.is-active {
+  background-color: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.sidebar-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.sidebar-label {
+  flex: 1;
+}
+
+.sidebar-badge {
+  min-width: 22px;
+  padding: 1px 7px;
+  text-align: center;
+  font-size: 0.78rem;
+  border-radius: 999px;
   background-color: var(--glass-bg-strong);
+  color: var(--text-on-dark);
 }
 
-.sidebar-thumb {
-  width: 40px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
+/* On the active (cream) link, keep the badge legible with a navy chip. */
+.sidebar-link.is-active .sidebar-badge {
+  background-color: var(--navy);
+  color: var(--cream);
 }
 
-.sidebar-item-title {
-  /* Clamp long titles to 2 lines so rows stay tidy. */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Mobile: the rail becomes a horizontal row above the content. */
+@media (max-width: 760px) {
+  .sidebar {
+    position: static;
+    flex-basis: auto;
+    width: 100%;
+    margin-bottom: var(--space-md);
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+  }
+
+  .sidebar-link {
+    justify-content: center;
+  }
 }

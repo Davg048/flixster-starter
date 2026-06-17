@@ -99,15 +99,15 @@ Deployed Application (optional): [Flixster Deployed Site](ADD_LINK_HERE)
   - [x] If the movie is already watched:
     - [x] Clicking on the visual element should mark the movie as *not* watched.
     - [x] There should be visual feedback (such as the eye turning a different color) to show that the movie has not been watched.
-- [ ] **Sidebar**
-  - [ ] The website includes a side navigation bar.
-  - [ ] The sidebar has three pages:
-    - [ ] Home
-    - [ ] Favorites
-    - [ ] Watched
-  - [ ] The Home page displays all current movies in a grid view, the search bar, and the sort movies drop-down.
-  - [ ] The Favorites page displays all favorited movies in a grid view.
-  - [ ] The Watched page displays all watched movies in a grid view.
+- [x] **Sidebar**
+  - [x] The website includes a side navigation bar.
+  - [x] The sidebar has three pages:
+    - [x] Home
+    - [x] Favorites
+    - [x] Watched
+  - [x] The Home page displays all current movies in a grid view, the search bar, and the sort movies drop-down.
+  - [x] The Favorites page displays all favorited movies in a grid view.
+  - [x] The Watched page displays all watched movies in a grid view.
 
 ### Walkthrough Video
 
@@ -117,23 +117,25 @@ Deployed Application (optional): [Flixster Deployed Site](ADD_LINK_HERE)
 
 * Did the topics discussed in your labs prepare you to complete the assignment? Be specific, which features in your weekly assignment did you feel unprepared to complete?
 
-Add your response here
+Yes they did, they were nice introductory baby steps to react but i also feel like i was not able to completely finish them and get used to the features as much as i could have
+
 
 * If you had more time, what would you have done differently? Would you have added additional features? Changed the way your project responded to a particular event, etc.
-  
-Add your response here
+
+I definitely would have done more, style more, add more list functions, maybe sort by tags, and maybe even add shows in the future and not just movies
+ 
 
 * Reflect on your project demo, what went well? Were there things that maybe didn't go as planned? Did you notice something that your peer did that you would like to try next time?
 
-Add your response here
+I think it went perfectly fine, maybe just timing myself better would be a better way to improve and sometimes i have a moment or two when i would stop talking so i need to improve on that
 
 ### Open-source libraries used
 
 - [React](https://react.dev/) + [Vite](https://vitejs.dev/) — UI framework and build tool
 - [The Movie Database (TMDb) API](https://developer.themoviedb.org/) — movie data, search, details, and trailers
-- [OpenRouter API](https://openrouter.ai/) — AI "Worth seeing?" recommendation
+- [OpenRouter API](https://openrouter.ai/) — AI recommendation
 - [Google Fonts](https://fonts.google.com/) — Poppins & Inter typefaces
 
 ### Shout out
 
-Add your shout out here
+My peers and devarsh, i really feel and beleive and see how heavily he wants us to succeed

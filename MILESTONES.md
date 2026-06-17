@@ -647,9 +647,21 @@ mouse-only test.
   open/close focus management via a `[isOpen]`-keyed effect (with `onClose` held
   in a ref to avoid re-run churn), and Escape-to-close mirroring the modal.
 
-### What the adversarial review caught (and how it was fixed)
-This feature touched far more interacting state, and the review surfaced **11
-confirmed issues** (several overlapping), in two clusters:
+### Update: reworked into a 3-page nav
+The original drawer was later **reworked into a persistent left navigation with
+three pages — Home / Favorites / Watched** — to match the assignment spec exactly.
+A single `view` state (`'home' | 'favorites' | 'watched'`) in `App` drives which
+page renders: Home shows search + sort + the Now Playing/search grid + Load More;
+Favorites and Watched each show just their grid (resolved from the `moviesById`
+registry) with an empty-state message. The drawer's open/close + `inert`/focus
+machinery was *removed* — a persistent, always-visible nav doesn't need it.
+(Named the state `view`, not `page`, to avoid colliding with the pagination
+`page`.) A focused review confirmed view-switching, per-page search/sort/Load-More
+gating, sorting across all pages, and a null-guard added to `sortMovies`.
+
+### What the adversarial review caught on the ORIGINAL drawer (and how it was fixed)
+That first version touched far more interacting state, and the review surfaced
+**11 confirmed issues** (several overlapping), in two clusters:
 
 **Cluster A — filter/view desync (HIGH):** the grid filtered the *current view*
 while the sidebar used the *global registry*, so they disagreed; switching views
